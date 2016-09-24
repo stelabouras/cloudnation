@@ -293,6 +293,10 @@
 		    scRequest.onload = function() {
 
 		        var track = JSON.parse(scRequest.response);
+
+		        if(track.kind == 'playlist')
+		        	track = track.tracks[0];
+
 		        this.loadSound(track.stream_url + '?client_id=' + this.SC_API_KEY); 
 
 		    }.bind(this);
