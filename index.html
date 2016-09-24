@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CloudNation</title>
+        <style>
+        html, body { overflow: hidden; }
+        body { background: black; }
+        img { display: none; }
+        section {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            z-index: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: .25s ease-in opacity;
+        }
+        section div {
+            width: 40%;
+            height: 300px;
+            min-width: 400px;
+        }
+        section h2,
+        section p {
+            font-family: Helvetica, Arial, sans-serif;
+            color: #fff;
+        }
+        section h2 {
+            font-size: 40px;
+        }
+        section p {
+            color: rgba(255, 255, 255, .7);
+            font-size: 20px;
+        }
+        section span {
+            cursor: pointer;
+            text-decoration: underline;
+            transition: .25s ease-in color;
+        }
+        section span:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+        section input {
+            width: 100%;
+            padding: 0;
+            background: transparent;
+            border: none;
+            font-size: 40px;
+            border-bottom: 3px solid rgba(255, 255, 255, .8);
+            color: #fff;
+            transition: .25s ease-in border-bottom;
+        }
+        section input:focus {
+            outline: none;
+            border-bottom: 3px solid #fff;
+        }
+        section input::-webkit-input-placeholder {
+            color: rgba(255, 255, 255, .5);
+        }
+        </style>
+    </head>
+    <body>
+        <section id="container">
+            <div>
+                <h2>🎵 Enter a Soundcloud url or drag'n'drop a .mp3 or .ogg file!</h2>
+
+                <input autofocus placeholder="Soundcloud track url" type="text" id="soundcloud_url"/>
+
+                <p>or <span id="demo_song">play the demo song</span>!</p>
+            </div>
+        </section>
+
+        <canvas id="canvas" width="1000" height="1000"></canvas>
+
+        <img id="logo" src="cloudnation.png"/>
+
+        <script src="dat.gui.js"></script>
+        <script src="curve.js"></script>
+        <script src="smooth.js"></script>
+        <script src="stats.js"></script>
+        <script src="cloudnation.js"></script>
+    </body>
+</html>
