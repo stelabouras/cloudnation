@@ -10,7 +10,7 @@ https://www.youtube.com/trapnation
 
 Major thanks to:
 
-Stats.js https://github.com/mrdoob/stats.js/
-Smooth.js https://github.com/osuushi/Smooth.js/
-CardinalSpline.js https://github.com/epistemex/cardinal-spline-js
-Dat.GUI.js https://github.com/dataarts/dat.gui
+* Stats.js https://github.com/mrdoob/stats.js/
+* Smooth.js https://github.com/osuushi/Smooth.js/
+* CardinalSpline.js https://github.com/epistemex/cardinal-spline-js
+* Dat.GUI.js https://github.com/dataarts/dat.gui
