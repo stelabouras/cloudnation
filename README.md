@@ -4,9 +4,9 @@
 
 [Try the demo &raquo;](https://stelabouras.github.io/cloudnation/)
 
-Cloudation is a music visualizer, mostly suited for trap tracks, made to resemble the awesome visualization of the Trapnation YouTube channel.
+CloudNation is a music visualizer, mostly suited for trap tracks, made to resemble the awesome visualization of the Trapnation YouTube channel.
 
-Cloudation has been made using canvas and WebAudio, it fetches the music tracks using the SoundCloud API and the backgrounds using the Unsplash API.
+CloudNation is powered by canvas and WebAudio and fetches the music tracks using the SoundCloud API and the background images using the Unsplash API.
 
 You can paste a SoundCloud url in the field, drag'n'drop a .ogg or .mp3 file in the page or drag'n'drop a SoundCloud url (easter egg ;) ).
 
