@@ -6,8 +6,6 @@
 
 		loadBackground: true,
 
-		// API keys
-		SC_API_KEY: 'c39dc832a8eb12188c149e2715bcc818',
 		US_API_KEY: 'edebfae51c3c8c6ffbf303716256015ec6aec7652091a1d921a8bcc5c3e18344',
 
 		// Stats
@@ -49,14 +47,14 @@
 		glowColor: { r: 255, g: 255, b: 255, a: 0.35 },
 
 		// Beat detection
-		minBeatFrequency : 3, //inclusive
-		maxBeatFrequency : 3, //inclusive
-		beatDetectionTrigger : -24,
+		minBeatFrequency : 0, //inclusive
+		maxBeatFrequency : 6, //inclusive
+		beatDetectionTrigger : -36,
 
 		// Scale
 		lastTS: 0,
-		beatScale: 1.25,
-		beatScaleFalloff: 250, // msec
+		beatScale: 1.8,
+		beatScaleFalloff: 680, // msec
 		currentScale: 1.0,
 		previousScale: 1.0,
 		currentFalloff: 0,
@@ -85,10 +83,7 @@
 			this.stats.showPanel( 0 );
 			document.body.appendChild( this.stats.dom );
 
-			this.context = new AudioContext();
-
 			this.container = document.getElementById('container');
-			this.input = document.getElementById('soundcloud_url');
 			this.canvas = document.getElementById('canvas');
 			this.cloudnationLogo = document.getElementById('logo');
 
@@ -102,40 +97,7 @@
 
 			this.onWindowResize(); 
 
-			this.setupAudioNodes();
-
 			this.createStars();
-
-			this.detectHash();
-
-			this.input.addEventListener('blur', function(event) {
-
-				var sound_url = event.target.value;
-
-				if(sound_url.indexOf("soundcloud.com/") == -1)
-					return;
-
-				this.loadSoundCloud(sound_url);
-
-				this.hideInterface();
-
-			}.bind(this), false);
-
-			this.input.addEventListener('keydown', function(event) {
-
-				if(event.keyCode != 13)
-					return;
-
-				this.blur();
-
-			}, false);
-
-			document.getElementById('demo_song').addEventListener('click', function() {
-
-				this.hideInterface();
-				this.loadSoundCloud('https://soundcloud.com/nolanvanlith/truecolorsrmx');
-
-			}.bind(this), false);
 
 			window.addEventListener('keydown', function(event) {
 
@@ -155,77 +117,58 @@
 
 			document.addEventListener('dragover', this.onDocumentDragOver.bind(this), false);
 
+			document.querySelector('#loaded').addEventListener('click', () => {
+				if (this.audioData == null)
+					return;
+
+                this.hideInterface();
+
+                if(!this.loadBackground)
+                	this.decodeAndPlaySound(this.audioData);
+                else
+	                this.loadBackgroundImage(() => { 
+	                	this.decodeAndPlaySound(this.audioData); 
+	             });
+			});
+
 			window.requestAnimationFrame(this.render.bind(this));
 		},
 
-		detectHash : function() {
-
-			var hash = location.hash;
-
-			if(hash.length <= 1)
-				return;
-
-			hash = hash.substring(1);
-
-			if(hash.indexOf("soundcloud.com/") == -1)
-				return;
-
-			this.loadSoundCloud(hash);
-
-			this.hideInterface();
-		},
-
 		hideInterface : function() {
-
-			this.input.value = '';
 			this.container.style.opacity = 0;
 		},
 
 		showInterface : function() {
-
 			this.container.style.opacity = 1;
-			this.input.focus();
 		},
 
 		// Events
+
+		audioData: null,
 
 		onDocumentDrop: function(event) {
 
 		    event.stopPropagation();
 		    event.preventDefault();
 
-			if(event.dataTransfer.getData("Url")) {
-
-				var url = event.dataTransfer.getData("Url");
-
-				if(url.indexOf("soundcloud.com/") > -1) {
-
-					this.loadSoundCloud(url);
-
-					this.hideInterface();
-				}
-			}
-
 		    if(event.dataTransfer.files[0]) {
 
 		        var file = event.dataTransfer.files[0];
 
-		        if(file.type == 'audio/ogg' || file.type == 'audio/mp3') {
+		        if(file.type == 'audio/ogg' 
+		        	|| file.type == 'video/ogg'
+		        	|| file.type == 'audio/mpeg'
+		        	|| file.type == 'audio/mp3') {
 
 		            var reader = new FileReader();
 
-		            reader.onload = function(fileEvent) {
+		            reader.onload = (fileEvent)  => {
 
-		                var data = fileEvent.target.result;
+		                this.audioData = fileEvent.target.result;
 
-		                this.hideInterface();
-
-		                if(!this.loadBackground)
-		                	this.decodeAndPlaySound(data);
-		                else
-			                this.loadBackgroundImage(function() { this.decodeAndPlaySound(data); }.bind(this));
-
-		            }.bind(this);
+		                document.querySelector('#container h2').style.display = 'none';
+		                document.querySelector('#loaded').style.display = 'flex';
+		            };
 		    
 		            reader.readAsArrayBuffer(file);
 		        }
@@ -286,23 +229,6 @@
 		    this.analyser.connect(this.javascriptNode);
 		},
 
-		loadSoundCloud: function(soundcloud_url) {
-
-		    var scRequest = new XMLHttpRequest();
-		    scRequest.open('GET', '//api.soundcloud.com/resolve?url=' + soundcloud_url+ '&client_id=' + this.SC_API_KEY, true);
-		    scRequest.onload = function() {
-
-		        var track = JSON.parse(scRequest.response);
-
-		        if(track.kind == 'playlist')
-		        	track = track.tracks[0];
-
-		        this.loadSound(track.stream_url + '?client_id=' + this.SC_API_KEY); 
-
-		    }.bind(this);
-		    scRequest.send();   
-		},
-
 		loadSound: function(sound_url) {
 
 		    var request = new XMLHttpRequest();
@@ -359,6 +285,10 @@
 		    if(this.sourceNode)
 		        this.sourceNode.disconnect();
 
+			this.context = new AudioContext();
+
+			this.setupAudioNodes();
+			
 		    this.sourceNode = this.context.createBufferSource();
 		    this.sourceNode.connect(this.analyser);
 		    this.sourceNode.connect(this.context.destination);

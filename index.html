@@ -66,16 +66,45 @@
         section input::-webkit-input-placeholder {
             color: rgba(255, 255, 255, .5);
         }
+        #loaded {
+            display: none;
+            align-self: center;
+            padding: 30px;
+            border-radius: 50%;
+            width: 300px;
+            height: 300px;
+            box-sizing: border-box;
+            border: 10px solid #fff;
+            background: #000;
+            text-align: center;
+            font-weight: bold;
+            color: #fff;
+            font-size: 50px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s all ease-in;
+        }
+        #loaded:hover {
+            transform: scale3d(0.9,0.9,0.9);
+        }
+        #container > div {
+            display: flex;
+            align-content: center;
+            justify-content: center;
+        }
+        #container > div > h2 {
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+        }
         </style>
     </head>
     <body>
         <section id="container">
             <div>
-                <h2>🎵 Enter a Soundcloud url or drag'n'drop a .mp3 or .ogg file!</h2>
-
-                <input autofocus placeholder="Soundcloud track url" type="text" id="soundcloud_url"/>
-
-                <p>or <span id="demo_song">play the demo song</span>!</p>
+                <h2>Drag'n'drop a .mp3 or .ogg file!</h2>
+                <button id="loaded">PLAY</button>
             </div>
         </section>
 
