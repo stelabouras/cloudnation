@@ -48,7 +48,7 @@
 
 		// Beat detection
 		minBeatFrequency : 0, //inclusive
-		maxBeatFrequency : 6, //inclusive
+		maxBeatFrequency : 3, //inclusive
 		beatDetectionTrigger : -36,
 
 		// Scale
@@ -156,11 +156,15 @@
 		        var file = event.dataTransfer.files[0];
 
 		        if(file.type == 'audio/ogg' 
+		        	| file.type == 'application/ogg' 
 		        	|| file.type == 'video/ogg'
 		        	|| file.type == 'audio/mpeg'
 		        	|| file.type == 'audio/mp3') {
 
 		            var reader = new FileReader();
+
+		        	this.audioData = null;
+		        	this.decodedAudioData = null;
 
 		            reader.onload = (fileEvent)  => {
 
@@ -250,6 +254,12 @@
 
 		    var usRequest = new XMLHttpRequest();
 		    usRequest.open('GET', '//api.unsplash.com/photos/random/?client_id=' + this.US_API_KEY + '&collections=176316', true);
+		    usRequest.onerror = () => {
+	            document.body.style.background = '#000';
+
+	            if(callback)
+	                callback();
+		    };
 		    usRequest.onload = function() {
 
 		        var response = JSON.parse(usRequest.response);
@@ -280,6 +290,8 @@
 		    usRequest.send();   
 		},
 
+		decodedAudioData: null,
+
 		decodeAndPlaySound: function(response) {
 
 		    if(this.sourceNode)
@@ -292,13 +304,23 @@
 		    this.sourceNode = this.context.createBufferSource();
 		    this.sourceNode.connect(this.analyser);
 		    this.sourceNode.connect(this.context.destination);
+		    if (this.decodedAudioData != null) {
+		    	this.playSound();
+		    }
+		    else {
+			    this.context.decodeAudioData(response, function(buffer) {
+			    	this.decodedAudioData = buffer;
+			    	this.playSound();
+			    }.bind(this), function(error) { console.log(error); });
+			}
+		},
 
-		    this.context.decodeAudioData(response, function(buffer) {
-
-		        this.sourceNode.buffer = buffer;
-		        this.sourceNode.start(0);
-
-		    }.bind(this), function(error) { console.log(error); });
+		playSound: function() {
+			if (this.decodedAudioData == null) {
+				return;
+			}
+	        this.sourceNode.buffer = this.decodedAudioData;
+	        this.sourceNode.start(0);
 		},
 
 		// Starfield
