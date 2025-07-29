@@ -41,7 +41,9 @@
 		// Starfield
 		stars: 750,
 		starData: [],
-		starSpeed: 1,
+		previousStarSpeed: 1,
+		targetStarSpeed: 1,
+		currentStarSpeed: 1,
 		dist: 256,
 
 		glowColor: { r: 255, g: 255, b: 255, a: 0.35 },
@@ -53,10 +55,14 @@
 
 		// Scale
 		lastTS: 0,
-		beatScale: 1.8,
-		beatScaleFalloff: 680, // msec
-		currentScale: 1.0,
+		beatScale: 1.5,
+		beatScaleIncreaseDuration: 50, // msec
+		beatScaleStayDuration: 200, // msec
+		beatScaleDecreaseDuration: 100, // msec
+
 		previousScale: 1.0,
+		targetScale: 1.0,
+		currentScale: 1.0,
 		currentFalloff: 0,
 
 		redDelay: 0,
@@ -200,6 +206,8 @@
 
 		    this.canvasWidth = this.windowWidth;
 		    this.canvasHeight= this.windowHeight;
+
+		    this.radius = this.windowWidth / 8.0;
 		},
 
 		// WebAudio and Sound loading
@@ -319,6 +327,7 @@
 			if (this.decodedAudioData == null) {
 				return;
 			}
+			this.cloudnationLogo.style.display = 'block';
 	        this.sourceNode.buffer = this.decodedAudioData;
 	        this.sourceNode.start(0);
 		},
@@ -331,7 +340,7 @@
 
 		    for( var i=0; i< this.stars; i++ ) {
 
-		        this.starData[i*4+2] -= this.starSpeed;
+		        this.starData[i*4+2] -= this.currentStarSpeed;
 		        this.starData[i*4+0] = this.starData[i*4+0] + 0.5 * Math.sin(this.starData[i*4+2] / 256);
 		        this.starData[i*4+1] = this.starData[i*4+1] + 0.5 * Math.sin(this.starData[i*4+2] / 256);
 
@@ -420,14 +429,23 @@
 
 		// Rendering
 
+		direction: 0, // 1 increases, 2 stays, -1 decreases
+
+		currentBeatScaleDuration: function() {
+			if (this.direction == 2)
+				return this.beatScaleStayDuration;
+			else if (this.direction == 1)
+				return this.beatScaleIncreaseDuration;
+			else
+				return this.beatScaleDecreaseDuration;
+		},
+
 		render: function(timestamp) {
 
 		    this.stats.begin();
 
 		    if(!this.lastTS) {
-
-		        this.lastTS = Date.now();
-
+		        this.lastTS = performance.now()
 				window.requestAnimationFrame(this.render.bind(this));
 		        return;
 		    }
@@ -435,21 +453,42 @@
 		    var deltaTS = timestamp - this.lastTS;
 		    this.lastTS = timestamp;
 
-		    if(this.currentFalloff > 0) {
-
+		    if(this.currentFalloff > 0 && this.direction != 0) {
 		        this.currentFalloff -= deltaTS;
 
-		        if(this.currentFalloff < 0) {
-
-		            this.currentFalloff = 0;
-		            this.currentScale = 1;
-		            this.previousScale = 1;
+		        if(this.currentFalloff <= 0) {
+		        	if (this.direction == 1) {
+		        		this.direction = 2;
+		        		this.previousScale = this.currentScale;
+		        		this.targetScale = this.currentScale;
+		        		this.previousStarSpeed = this.currentStarSpeed;
+		        		this.targetStarSpeed = this.currentStarSpeed;
+		        		this.currentFalloff = this.beatScaleStayDuration;
+		        	}
+		        	else if (this.direction == 2) {
+		        		this.direction = -1;
+		        		this.previousScale = this.currentScale;
+		        		this.targetScale = 1;
+		        		this.previousStarSpeed = this.currentStarSpeed;
+		        		this.targetStarSpeed = 1;
+		        		this.currentFalloff = this.beatScaleDecreaseDuration;
+		        	}
+		        	else {
+		        		this.direction = 0;
+		        		this.previousScale = 1;
+			            this.targetScale = 1;
+			            this.previousStarSpeed = 1;
+			            this.targetStarSpeed = 1;
+			            this.currentFalloff = 0;
+		        	}
 		        }
 		    }
 
-		    if(this.audioFrequencies != undefined && this.audioFrequencies.length > 0 && isFinite(this.audioFrequencies[0][0]))  {
+		    var soundKey 	= 0;
 
-			    var soundKey 	= 0;
+		    if(this.audioFrequencies != undefined 
+		    	&& this.audioFrequencies.length > 0 
+		    	&& isFinite(this.audioFrequencies[0][0]))  {
 			    var soundKeyCnt = 0;
 
 			    for(var keyIndex = this.minBeatFrequency; keyIndex < this.maxBeatFrequency + 1; keyIndex++) {
@@ -461,33 +500,36 @@
 			    if(soundKeyCnt > 0)
 				    soundKey = soundKey / soundKeyCnt;
 
-			    var scaleFactor = 1.0;
-
-			    if(soundKey >= this.beatDetectionTrigger) {
-
-			    	var absSoundKey = Math.abs(soundKey);
-
-		            this.previousScale = 1.0;
-		            this.currentFalloff = this.beatScaleFalloff;
-		            this.currentScale = this.beatScale;
-		            this.starSpeed = 5;
-			    }
-			    else 
-			    	this.starSpeed = 1;
+				if (soundKey >= this.beatDetectionTrigger) {
+				    if(this.direction == 0 || this.direction == -1) {
+				    	this.direction = 1;
+				    	this.previousScale = this.currentScale;
+			            this.targetScale = this.beatScale;
+			            this.previousStarSpeed = this.currentStarSpeed;
+			            this.targetStarSpeed = 5;
+			            this.currentFalloff = this.beatScaleIncreaseDuration;
+				    }
+				    else if (this.direction == 2) {
+		        		this.currentFalloff = this.beatScaleStayDuration;
+				    }
+				}
 		    }
 
 		    if(this.currentFalloff > 0) {
+		        let normalizedValue = (this.currentBeatScaleDuration() -  this.currentFalloff) / this.currentBeatScaleDuration();
 
-		        var scaleSmooth = Smooth([this.currentScale, this.previousScale]);
+		        let scaleSmooth = Smooth([this.previousScale, this.targetScale]);
+		        this.currentScale = scaleSmooth(normalizedValue);
 
-		        scaleFactor = scaleSmooth(((this.beatScaleFalloff -  this.currentFalloff) / this.beatScaleFalloff));
+		        let starSpeedSmooth = Smooth([this.previousStarSpeed, this.targetStarSpeed]);
+		        this.currentStarSpeed = starSpeedSmooth(normalizedValue);
 		    }
 
 		    this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
 		    this.drawStarfield(this.ctx);
 
-		    this.drawSpectrum(scaleFactor, soundKey);
+		    this.drawSpectrum(this.currentScale, soundKey);
 
 		   	this.stats.end();
 
@@ -495,6 +537,9 @@
 		},
 
 		drawSpectrum: function(scaleFactor, soundKey) {
+		    if (this.context == null) {
+		    	return;
+		    }
 
 		    if(this.showSpectrum && this.audioFrequencies != undefined && this.audioFrequencies.length > 0) {
 
@@ -667,9 +712,11 @@
 		    this.ctx.fillStyle = '#ffffff';
 		    this.ctx.fill();
 
-		    this.ctx.drawImage(this.cloudnationLogo, - 150, - 150);
-
 		    this.ctx.restore();
+
+		    if (this.decodedAudioData != null) {
+				this.cloudnationLogo.style.transform = 'translate3d(-50%, -50%,0) scale3d('+scaleFactor+','+scaleFactor+','+scaleFactor+')';
+			}
 		}
 	};
 
@@ -699,7 +746,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	f2.add(Cloudnation, 'minBeatFrequency', 0, 255).step(1);
 	f2.add(Cloudnation, 'maxBeatFrequency', 0, 255).step(1);
 	f2.add(Cloudnation, 'beatDetectionTrigger', -255, 0);
-	f2.add(Cloudnation, 'beatScaleFalloff', 0, 1000);
+	f2.add(Cloudnation, 'beatScaleIncreaseDuration', 0, 1000);
+	f2.add(Cloudnation, 'beatScaleStayDuration', 0, 1000);
+	f2.add(Cloudnation, 'beatScaleDecreaseDuration', 0, 1000);
 	f2.add(Cloudnation, 'beatScale', 1, 10);
 
 	gui.closed = true;
