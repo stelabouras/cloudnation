@@ -677,7 +677,7 @@
 			    this.ctx.beginPath();
 			    this.ctx.curve(pointsG);
 			    this.ctx.curve(pointsMirrorG);
-			    this.ctx.fillStyle='#00ff00';
+			    this.ctx.fillStyle='rgb(188,201,201)';
 			    this.ctx.fill();
 		    }
 
@@ -686,7 +686,7 @@
 			    this.ctx.beginPath();
 			    this.ctx.curve(pointsB);
 			    this.ctx.curve(pointsMirrorB);
-			    this.ctx.fillStyle='#0000ff';
+			    this.ctx.fillStyle='rgb(178,191,191)';
 			    this.ctx.fill();
 		    }
 
@@ -695,21 +695,21 @@
 			    this.ctx.beginPath();
 			    this.ctx.curve(pointsR);
 			    this.ctx.curve(pointsMirrorR);
-			    this.ctx.fillStyle='#ff0000';
+			    this.ctx.fillStyle='rgb(168,181,181)';
 			    this.ctx.fill();
 		    }
 
 		    this.ctx.beginPath();
 		    this.ctx.curve(points);
 		    this.ctx.curve(pointsMirror);
-		    this.ctx.fillStyle="#ffffff";;
+		    this.ctx.fillStyle="rgb(158,171,171)";;
 		    this.ctx.fill();
 
 		    this.ctx.restore();
 
 		    this.ctx.beginPath();
 		    this.ctx.arc(0, 0, this.radius, 0, 2 * Math.PI, false);
-		    this.ctx.fillStyle = '#ffffff';
+		    this.ctx.fillStyle = 'rgb(158,171,171)';
 		    this.ctx.fill();
 
 		    this.ctx.restore();
